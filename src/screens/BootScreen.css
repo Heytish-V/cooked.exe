@@ -1,0 +1,177 @@
+.boot-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  padding: 2rem;
+}
+
+/* Radar Sweep */
+.boot-screen__radar {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  opacity: 0.12;
+}
+
+.boot-screen__radar-sweep {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    var(--cyan) 30deg,
+    transparent 60deg
+  );
+  animation: radarSweep 3s linear infinite;
+}
+
+.boot-screen__radar-ring {
+  position: absolute;
+  border: 1px solid var(--cyan);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.boot-screen__radar-ring--1 {
+  width: 100%;
+  height: 100%;
+}
+
+.boot-screen__radar-ring--2 {
+  width: 66%;
+  height: 66%;
+}
+
+.boot-screen__radar-ring--3 {
+  width: 33%;
+  height: 33%;
+}
+
+@keyframes radarSweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Content */
+.boot-screen__content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+}
+
+.boot-screen__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 5vw, 2.8rem);
+  font-weight: 800;
+  color: var(--cyan);
+  text-shadow: 0 0 30px var(--cyan-glow), 0 0 60px var(--cyan-glow);
+  letter-spacing: 0.15em;
+  margin-bottom: 0.3rem;
+  line-height: 1.2;
+}
+
+.boot-screen__subtitle {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 4vw, 2.2rem);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.boot-screen__version {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  margin-bottom: 2rem;
+}
+
+/* Boot Log */
+.boot-screen__log {
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 2rem;
+  max-height: 200px;
+  overflow: hidden;
+}
+
+.boot-screen__log-line {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--green);
+  margin-bottom: 0.3rem;
+  line-height: 1.5;
+}
+
+.boot-screen__log-prefix {
+  color: var(--cyan);
+  margin-right: 0.5rem;
+}
+
+/* Progress */
+.boot-screen__progress {
+  text-align: left;
+}
+
+.boot-screen__progress-label {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--cyan);
+  margin-bottom: 0.5rem;
+}
+
+.boot-screen__progress-bar {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.boot-screen__progress-fill {
+  color: var(--cyan);
+  text-shadow: 0 0 6px var(--cyan-glow);
+  letter-spacing: 1px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.boot-screen__progress-pct {
+  color: var(--text);
+  font-weight: 600;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .boot-screen__radar {
+    width: 300px;
+    height: 300px;
+  }
+
+  .boot-screen__log {
+    padding: 0.8rem;
+  }
+
+  .boot-screen__log-line {
+    font-size: 0.65rem;
+  }
+}
