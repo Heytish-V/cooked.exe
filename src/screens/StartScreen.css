@@ -1,0 +1,154 @@
+/* StartScreen.css — xAI-inspired terminal landing page */
+
+.start-screen {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+}
+
+.start-screen__container {
+  width: 100%;
+  max-width: 560px;
+}
+
+/* ─── OS Header ──────────────────────────── */
+.start-screen__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) var(--space-lg);
+  border: 1px solid var(--hairline);
+  border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--canvas-soft);
+}
+
+.start-screen__header-title {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.start-screen__header-session {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--mute);
+}
+
+/* ─── Main Card ──────────────────────────── */
+.start-screen__card {
+  background: var(--canvas-card);
+  border: 1px solid var(--hairline);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  padding: var(--space-4xl) var(--space-2xl);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xl);
+}
+
+/* ─── Eyebrow ────────────────────────────── */
+.start-screen__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+/* ─── Title ──────────────────────────────── */
+.start-screen__title {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 6vw, 48px);
+  font-weight: 400;
+  letter-spacing: -1.2px;
+  line-height: 1;
+  color: var(--ink);
+}
+
+/* ─── Subtitle ───────────────────────────── */
+.start-screen__subtitle {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--body);
+  line-height: 1.6;
+}
+
+/* ─── CTA Button ─────────────────────────── */
+.start-screen__cta-wrapper {
+  margin-top: var(--space-lg);
+}
+
+.start-screen__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md) var(--space-3xl);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: subtleGlow 3s ease-in-out infinite;
+}
+
+.start-screen__cta:hover {
+  background: var(--ink);
+  color: var(--canvas);
+  border-color: var(--ink);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.15);
+}
+
+.start-screen__cta:active {
+  transform: scale(0.97);
+}
+
+/* ─── Disclaimer ─────────────────────────── */
+.start-screen__disclaimer {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--mute);
+  letter-spacing: 0.5px;
+}
+
+/* ─── Footer ─────────────────────────────── */
+.start-screen__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--mute);
+  letter-spacing: 0.5px;
+}
+
+.start-screen__footer-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--zen);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ─── Responsive ─────────────────────────── */
+@media (max-width: 480px) {
+  .start-screen__card {
+    padding: var(--space-3xl) var(--space-lg);
+  }
+}

@@ -1,69 +1,87 @@
 import { useState, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import ParticleBackground from './components/ParticleBackground';
 import GridBackground from './components/GridBackground';
 import ScanlineOverlay from './components/ScanlineOverlay';
-import BootScreen from './screens/BootScreen';
-import QuestionScreen from './screens/QuestionScreen';
-import ScanningScreen from './screens/ScanningScreen';
+import StartScreen from './screens/StartScreen';
+import QuizScreen from './screens/QuestionScreen';
+import AnalyzingScreen from './screens/ScanningScreen';
 import ResultsScreen from './screens/ResultsScreen';
+import questions from './data/questions';
+import { selectQuestions } from './engine/questionSelector';
+import { calculateResults } from './engine/stressScorer';
 
 /**
  * App — Main state machine for the 4-screen flow.
  *
- * Screen flow: boot → questions → scanning → results
- * State is managed with a simple string + answers object.
+ * Flow: START → QUIZ → ANALYZING → RESULTS
+ *                                      ↓
+ *                                   RESTART → START
  */
 
 const SCREENS = {
-  BOOT: 'boot',
-  QUESTIONS: 'questions',
-  SCANNING: 'scanning',
+  START: 'start',
+  QUIZ: 'quiz',
+  ANALYZING: 'analyzing',
   RESULTS: 'results',
 };
 
 export default function App() {
-  const [screen, setScreen] = useState(SCREENS.BOOT);
+  const [screen, setScreen] = useState(SCREENS.START);
+  const [selectedQuestions, setSelectedQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
+  const [results, setResults] = useState(null);
 
-  const handleBootComplete = useCallback(() => {
-    setScreen(SCREENS.QUESTIONS);
+  const handleStart = useCallback(() => {
+    // Pick 10 questions from the pool, balanced across categories
+    const picked = selectQuestions(questions, 10);
+    setSelectedQuestions(picked);
+    setAnswers({});
+    setResults(null);
+    setScreen(SCREENS.QUIZ);
   }, []);
 
-  const handleQuestionsComplete = useCallback((userAnswers) => {
+  const handleQuizComplete = useCallback((userAnswers) => {
     setAnswers(userAnswers);
-    setScreen(SCREENS.SCANNING);
+    setScreen(SCREENS.ANALYZING);
   }, []);
 
-  const handleScanComplete = useCallback(() => {
+  const handleAnalyzingComplete = useCallback(() => {
+    // Compute scores with the selected questions and answers
+    const computed = calculateResults(selectedQuestions, answers);
+    setResults(computed);
     setScreen(SCREENS.RESULTS);
-  }, []);
+  }, [selectedQuestions, answers]);
 
   const handleRestart = useCallback(() => {
     setAnswers({});
-    setScreen(SCREENS.BOOT);
+    setResults(null);
+    setSelectedQuestions([]);
+    setScreen(SCREENS.START);
   }, []);
 
   return (
     <div className="app">
-      {/* Persistent background effects */}
+      {/* Persistent ambient background effects */}
       <GridBackground />
-      <ParticleBackground />
       <ScanlineOverlay />
 
       {/* Screen transitions */}
       <AnimatePresence mode="wait">
-        {screen === SCREENS.BOOT && (
-          <BootScreen key="boot" onComplete={handleBootComplete} />
+        {screen === SCREENS.START && (
+          <StartScreen key="start" onStart={handleStart} />
         )}
-        {screen === SCREENS.QUESTIONS && (
-          <QuestionScreen key="questions" onComplete={handleQuestionsComplete} />
+        {screen === SCREENS.QUIZ && (
+          <QuizScreen
+            key="quiz"
+            questions={selectedQuestions}
+            onComplete={handleQuizComplete}
+          />
         )}
-        {screen === SCREENS.SCANNING && (
-          <ScanningScreen key="scanning" onComplete={handleScanComplete} />
+        {screen === SCREENS.ANALYZING && (
+          <AnalyzingScreen key="analyzing" onComplete={handleAnalyzingComplete} />
         )}
-        {screen === SCREENS.RESULTS && (
-          <ResultsScreen key="results" answers={answers} onRestart={handleRestart} />
+        {screen === SCREENS.RESULTS && results && (
+          <ResultsScreen key="results" results={results} onRestart={handleRestart} />
         )}
       </AnimatePresence>
     </div>

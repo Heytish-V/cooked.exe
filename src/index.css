@@ -1,34 +1,57 @@
 /*
- * index.css — Global Design System
+ * index.css — xAI-Inspired Design System for cooked.exe
  *
- * CUSTOMIZATION GUIDE:
- * - Colors: edit the CSS custom properties below
- * - Fonts: swap the font-family values
- * - Grid/scanline intensity: adjust opacity values
- * - Animation speed: modify keyframe durations
+ * Built from Design.md tokens. Near-black canvas, white ink, pill-shaped
+ * buttons, hairline borders (no shadows), Inter + JetBrains Mono typography.
  */
 
 /* ============================================
    DESIGN TOKENS
    ============================================ */
 :root {
-  /* Colors */
-  --bg-dark: #05070A;
-  --panel: #0F1720;
-  --border: #1a2332;
-  --cyan: #00E5FF;
-  --cyan-glow: rgba(0, 229, 255, 0.35);
-  --orange: #FF9E2C;
-  --red: #FF4D4D;
-  --green: #00FF9C;
-  --text: #e0e6ed;
-  --text-secondary: #b0bcc8;
-  --text-dim: #5a6a7a;
+  /* Surface */
+  --canvas: #0a0a0a;
+  --canvas-soft: #1a1c20;
+  --canvas-card: #141414;
+  --canvas-mid: #363a3f;
+  --hairline: #212327;
 
-  /* Fonts */
-  --font-display: 'Orbitron', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --font-body: 'Space Grotesk', sans-serif;
+  /* Text */
+  --ink: #ffffff;
+  --body: #dadbdf;
+  --mute: #7d8187;
+
+  /* Accent */
+  --accent-sunset: #ff7a17;
+  --accent-sunset-soft: #ffc285;
+  --accent-dusk: #7c3aed;
+  --accent-twilight: #c4b5fd;
+  --accent-breeze: #a0c3ec;
+
+  /* Diagnostic tier colors */
+  --zen: #00FF9C;
+  --mild: #c4b5fd;
+  --medium: #ff7a17;
+  --cooked: #FF4D4D;
+  --nuclear: #FF0040;
+
+  /* Typography */
+  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+  --space-4xl: 64px;
+
+  /* Shapes */
+  --radius-sm: 8px;
+  --radius-pill: 9999px;
 }
 
 /* ============================================
@@ -49,21 +72,24 @@ html {
 }
 
 body {
-  font-family: var(--font-body);
-  background-color: var(--bg-dark);
-  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 400;
+  background-color: var(--canvas);
+  color: var(--ink);
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.6;
 }
 
 h1, h2, h3, h4, h5, h6 {
+  font-weight: 400;
   line-height: 1.2;
   margin: 0;
 }
 
 button {
   font: inherit;
+  font-weight: 400;
   cursor: pointer;
   border: none;
   background: none;
@@ -71,7 +97,7 @@ button {
 }
 
 a {
-  color: var(--cyan);
+  color: var(--accent-twilight);
   text-decoration: none;
 }
 
@@ -95,11 +121,11 @@ a {
   height: 100%;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.04;
+  opacity: 0.03;
   background-image:
-    linear-gradient(var(--cyan) 1px, transparent 1px),
-    linear-gradient(90deg, var(--cyan) 1px, transparent 1px);
-  background-size: 50px 50px;
+    linear-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+  background-size: 60px 60px;
 }
 
 /* ============================================
@@ -129,6 +155,128 @@ a {
 }
 
 /* ============================================
+   TYPOGRAPHY UTILITIES
+   ============================================ */
+.display-xl {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 8vw, 96px);
+  line-height: 1;
+  letter-spacing: -2.4px;
+}
+
+.display-lg {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 6vw, 72px);
+  line-height: 1;
+  letter-spacing: -1.8px;
+}
+
+.display-md {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: 1;
+  letter-spacing: -1.2px;
+}
+
+.display-sm {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 32px);
+  line-height: 1.15;
+  letter-spacing: -0.6px;
+}
+
+.mono-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0.5px;
+}
+
+.body-md {
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.body-sm {
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* ============================================
+   CARD
+   ============================================ */
+.card {
+  background: var(--canvas-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xl);
+}
+
+/* ============================================
+   PILL BUTTON (PRIMARY)
+   ============================================ */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-xl);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--ink);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  user-select: none;
+}
+
+.btn-pill:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.btn-pill:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-pill--filled {
+  background: var(--ink);
+  color: var(--canvas);
+  border-color: var(--ink);
+}
+
+.btn-pill--filled:hover {
+  background: #e0e0e0;
+  border-color: #e0e0e0;
+}
+
+.btn-pill--accent {
+  border-color: var(--accent-sunset);
+  color: var(--accent-sunset);
+}
+
+.btn-pill--accent:hover {
+  background: rgba(255, 122, 23, 0.1);
+}
+
+/* ============================================
    GLOW BAR COMPONENT
    ============================================ */
 .glow-bar {
@@ -139,30 +287,30 @@ a {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.3rem;
+  margin-bottom: 4px;
 }
 
 .glow-bar__label {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--text-dim);
-  letter-spacing: 0.05em;
+  font-size: 11px;
+  color: var(--mute);
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
 .glow-bar__value {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 400;
 }
 
 .glow-bar__track {
   width: 100%;
   height: 6px;
-  background: var(--bg-dark);
+  background: var(--canvas);
   border-radius: 3px;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid var(--hairline);
 }
 
 .glow-bar__fill {
@@ -179,7 +327,7 @@ a {
 }
 
 .typewriter__cursor {
-  color: var(--cyan);
+  color: var(--ink);
   opacity: 1;
 }
 
@@ -210,39 +358,55 @@ a {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes subtleGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.05); }
+  50% { box-shadow: 0 0 40px rgba(255, 255, 255, 0.1); }
+}
+
+@keyframes ambientDrift {
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.06; }
+}
+
 /* ============================================
    SCROLLBAR
    ============================================ */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-dark);
+  background: var(--canvas);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
+  background: var(--hairline);
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-dim);
-}
-
-/* ============================================
-   RESPONSIVE UTILITIES
-   ============================================ */
-@media (max-width: 600px) {
-  html {
-    font-size: 14px;
-  }
+  background: var(--mute);
 }
 
 /* ============================================
    SELECTION
    ============================================ */
 ::selection {
-  background: var(--cyan);
-  color: var(--bg-dark);
+  background: var(--accent-sunset);
+  color: var(--canvas);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
 }

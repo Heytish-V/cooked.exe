@@ -1,155 +1,125 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import GlowBar from '../components/GlowBar';
-import { speak } from '../utils/sound';
-import './ScanningScreen.css';
-
 /**
- * ScanningScreen — Fake diagnostic scan with animated phases.
- * Runs for ~6 seconds, then calls onComplete.
+ * AnalyzingScreen — Brief "computing diagnosis" transition
  *
- * @param {function} onComplete — called when scanning finishes
+ * Runs for ~4 seconds with humorous processing lines,
+ * then auto-advances to results.
  */
 
-const scanPhases = [
-  { text: 'Scanning Human...', duration: 900 },
-  { text: 'Checking Sleep Subsystem...', duration: 800 },
-  { text: 'Checking Caffeine Levels...', duration: 800 },
-  { text: 'Checking Assignment Damage...', duration: 800 },
-  { text: 'Analyzing Mental Stability...', duration: 900 },
-  { text: 'Cross-referencing Excuses Database...', duration: 700 },
-  { text: 'Compiling Roast Protocol...', duration: 600 },
-  { text: 'Generating Report...', duration: 800 },
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import './ScanningScreen.css';
+
+const processingLines = [
+  'Cross-referencing excuse database...',
+  'Calculating caffeine dependency index...',
+  'Measuring remaining will to live...',
+  'Scanning for signs of functioning...',
+  'Compiling diagnostic report...',
+  'Generating roast protocol...',
 ];
 
-const telemetryBars = [
-  { label: 'CPU Stress', targetValue: 73, color: '#FF9E2C' },
-  { label: 'Coffee Level', targetValue: 85, color: '#FF4D4D' },
-  { label: 'Sleep Buffer', targetValue: 28, color: '#00FF9C' },
-  { label: 'Motivation', targetValue: 15, color: '#00E5FF' },
-];
+export default function AnalyzingScreen({ onComplete }) {
+  const [progress, setProgress] = useState(0);
+  const [currentLine, setCurrentLine] = useState(0);
 
-export default function ScanningScreen({ onComplete }) {
-  const [currentPhase, setCurrentPhase] = useState(0);
-  const [phaseProgress, setPhaseProgress] = useState(0);
-
-  // Speak on mount
+  // Animate progress bar
   useEffect(() => {
-    // Voice removed as per request
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + Math.random() * 3 + 1;
+      });
+    }, 60);
+    return () => clearInterval(interval);
   }, []);
 
-  // Cycle through scan phases
+  // Cycle through processing lines
   useEffect(() => {
-    if (currentPhase >= scanPhases.length) {
-      const timeout = setTimeout(onComplete, 600);
+    const interval = setInterval(() => {
+      setCurrentLine((prev) => {
+        if (prev >= processingLines.length - 1) {
+          clearInterval(interval);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 650);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Auto-advance when progress completes
+  useEffect(() => {
+    if (progress >= 100) {
+      const timeout = setTimeout(onComplete, 800);
       return () => clearTimeout(timeout);
     }
+  }, [progress, onComplete]);
 
-    setPhaseProgress(0);
-    const phase = scanPhases[currentPhase];
-    const steps = 20;
-    const stepDuration = phase.duration / steps;
-    let step = 0;
-
-    const interval = setInterval(() => {
-      step++;
-      setPhaseProgress(Math.min(100, Math.round((step / steps) * 100)));
-      if (step >= steps) {
-        clearInterval(interval);
-        setTimeout(() => setCurrentPhase((prev) => prev + 1), 200);
-      }
-    }, stepDuration);
-
-    return () => clearInterval(interval);
-  }, [currentPhase, onComplete]);
+  const progressClamped = Math.min(100, Math.floor(progress));
+  const filled = Math.floor(progressClamped / 5);
+  const empty = 20 - filled;
+  const progressBarText = '█'.repeat(filled) + '░'.repeat(empty);
 
   return (
     <motion.div
-      className="scanning-screen"
+      className="analyzing-screen"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="scanning-screen__container">
-        {/* Header */}
-        <div className="scanning-screen__header">
-          <div className="scanning-screen__badge">⚡ ANALYZING</div>
-          <h2 className="scanning-screen__title">DIAGNOSTIC SCAN IN PROGRESS</h2>
-          <p className="scanning-screen__subtitle">Please do not close this window or touch grass during analysis.</p>
-        </div>
+      <div className="analyzing-screen__container">
+        <div className="analyzing-screen__card">
+          {/* Title */}
+          <motion.div
+            className="analyzing-screen__title"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            COMPILING DIAGNOSIS...
+          </motion.div>
 
-        {/* Scan phases */}
-        <div className="scanning-screen__phases">
-          {scanPhases.map((phase, i) => (
-            <motion.div
-              key={i}
-              className={`scanning-screen__phase ${
-                i < currentPhase
-                  ? 'scanning-screen__phase--complete'
-                  : i === currentPhase
-                  ? 'scanning-screen__phase--active'
-                  : 'scanning-screen__phase--pending'
-              }`}
-              initial={{ opacity: 0, x: -15 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.08, duration: 0.3 }}
-            >
-              <span className="scanning-screen__phase-icon">
-                {i < currentPhase ? '✓' : i === currentPhase ? '▸' : '○'}
-              </span>
-              <span className="scanning-screen__phase-text">{phase.text}</span>
-              {i === currentPhase && (
-                <span className="scanning-screen__phase-pct">{phaseProgress}%</span>
-              )}
-              {i < currentPhase && (
-                <span className="scanning-screen__phase-done">OK</span>
-              )}
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Animated progress bar for current phase */}
-        <div className="scanning-screen__bar-container">
-          <div className="scanning-screen__bar-track">
-            <motion.div
-              className="scanning-screen__bar-fill"
-              animate={{ width: `${currentPhase >= scanPhases.length ? 100 : ((currentPhase + phaseProgress / 100) / scanPhases.length) * 100}%` }}
-              transition={{ duration: 0.3 }}
-            />
+          {/* Progress bar */}
+          <div className="analyzing-screen__progress">
+            <div className="analyzing-screen__progress-bar">
+              <span className="analyzing-screen__progress-fill">{progressBarText}</span>
+              <span className="analyzing-screen__progress-pct">{progressClamped}%</span>
+            </div>
           </div>
-          <div className="scanning-screen__bar-label">
-            Overall Progress: {currentPhase >= scanPhases.length ? 100 : Math.round(((currentPhase + phaseProgress / 100) / scanPhases.length) * 100)}%
-          </div>
-        </div>
 
-        {/* Fake telemetry during scan */}
-        <div className="scanning-screen__telemetry">
-          <div className="scanning-screen__telemetry-header">LIVE TELEMETRY</div>
-          <div className="scanning-screen__telemetry-bars">
-            {telemetryBars.map((bar, i) => (
-              <GlowBar
-                key={bar.label}
-                label={bar.label}
-                value={currentPhase > i + 1 ? bar.targetValue : currentPhase === i + 1 ? Math.round(bar.targetValue * phaseProgress / 100) : 0}
-                color={bar.color}
-                delay={0}
-              />
+          {/* Processing lines */}
+          <div className="analyzing-screen__lines">
+            {processingLines.slice(0, currentLine + 1).map((line, i) => (
+              <motion.div
+                key={i}
+                className={`analyzing-screen__line ${
+                  i < currentLine
+                    ? 'analyzing-screen__line--done'
+                    : 'analyzing-screen__line--active'
+                }`}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <span className="analyzing-screen__line-prefix">
+                  {i < currentLine ? '✓' : '▸'}
+                </span>
+                <span className="analyzing-screen__line-text">{line}</span>
+                {i < currentLine && (
+                  <span className="analyzing-screen__line-ok">OK</span>
+                )}
+              </motion.div>
             ))}
           </div>
         </div>
 
-        {/* Hex data decoration */}
-        <div className="scanning-screen__hex" aria-hidden="true">
-          {Array.from({ length: 3 }, (_, i) => (
-            <div key={i} className="scanning-screen__hex-line">
-              {Array.from({ length: 8 }, (_, j) => (
-                <span key={j}>
-                  {Math.floor(Math.random() * 0xFFFF).toString(16).padStart(4, '0').toUpperCase()}
-                </span>
-              )).join(' ')}
-            </div>
-          ))}
+        {/* Bottom warning */}
+        <div className="analyzing-screen__warning">
+          ⚠ Please do not close this window or touch grass during analysis.
         </div>
       </div>
     </motion.div>

@@ -1,188 +1,132 @@
-.scanning-screen {
+/* AnalyzingScreen.css — Brief diagnostic transition */
+
+.analyzing-screen {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  padding: 1.5rem;
-  position: relative;
+  padding: var(--space-xl);
 }
 
-.scanning-screen__container {
-  max-width: 650px;
+.analyzing-screen__container {
   width: 100%;
-  position: relative;
-  z-index: 2;
-}
-
-/* Header */
-.scanning-screen__header {
+  max-width: 520px;
   text-align: center;
-  margin-bottom: 2rem;
 }
 
-.scanning-screen__badge {
-  font-family: var(--font-display);
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: var(--bg-dark);
-  background: var(--orange);
-  padding: 0.2rem 0.8rem;
-  border-radius: 3px;
-  letter-spacing: 0.12em;
-  display: inline-block;
-  margin-bottom: 0.8rem;
-  animation: pulse 1.5s ease-in-out infinite;
+/* ─── Card ───────────────────────────────── */
+.analyzing-screen__card {
+  background: var(--canvas-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3xl) var(--space-2xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
 }
 
-.scanning-screen__title {
-  font-family: var(--font-display);
-  font-size: clamp(1rem, 3.5vw, 1.6rem);
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: 0.08em;
-  margin-bottom: 0.4rem;
-}
-
-.scanning-screen__subtitle {
+/* ─── Title ──────────────────────────────── */
+.analyzing-screen__title {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-dim);
+  font-size: 16px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink);
+  animation: pulse 2s ease-in-out infinite;
 }
 
-/* Phases */
-.scanning-screen__phases {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1.2rem;
-  margin-bottom: 1.5rem;
+/* ─── Progress ───────────────────────────── */
+.analyzing-screen__progress {
+  display: flex;
+  justify-content: center;
 }
 
-.scanning-screen__phase {
+.analyzing-screen__progress-bar {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.4rem 0;
+  gap: var(--space-md);
+}
+
+.analyzing-screen__progress-fill {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 12px;
+  color: var(--accent-sunset);
+  letter-spacing: -0.5px;
+  line-height: 1;
 }
 
-.scanning-screen__phase--complete {
-  color: var(--green);
+.analyzing-screen__progress-pct {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--body);
+  min-width: 36px;
+  text-align: right;
 }
 
-.scanning-screen__phase--active {
-  color: var(--cyan);
+/* ─── Processing Lines ───────────────────── */
+.analyzing-screen__lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  text-align: left;
 }
 
-.scanning-screen__phase--pending {
-  color: var(--text-dim);
-  opacity: 0.5;
+.analyzing-screen__line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
-.scanning-screen__phase-icon {
-  width: 1.2rem;
-  text-align: center;
+.analyzing-screen__line--active {
+  color: var(--ink);
+}
+
+.analyzing-screen__line--done {
+  color: var(--mute);
+}
+
+.analyzing-screen__line-prefix {
   flex-shrink: 0;
+  width: 14px;
+  text-align: center;
 }
 
-.scanning-screen__phase--active .scanning-screen__phase-icon {
-  animation: pulse 0.8s ease-in-out infinite;
+.analyzing-screen__line--active .analyzing-screen__line-prefix {
+  color: var(--accent-sunset);
 }
 
-.scanning-screen__phase-text {
+.analyzing-screen__line--done .analyzing-screen__line-prefix {
+  color: var(--zen);
+}
+
+.analyzing-screen__line-text {
   flex: 1;
 }
 
-.scanning-screen__phase-pct {
-  color: var(--cyan);
-  font-weight: 600;
+.analyzing-screen__line-ok {
+  font-size: 10px;
+  color: var(--zen);
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
-.scanning-screen__phase-done {
-  color: var(--green);
-  font-weight: 600;
-}
-
-/* Overall progress bar */
-.scanning-screen__bar-container {
-  margin-bottom: 1.5rem;
-}
-
-.scanning-screen__bar-track {
-  width: 100%;
-  height: 6px;
-  background: var(--panel);
-  border-radius: 3px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-
-.scanning-screen__bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--cyan), var(--green));
-  box-shadow: 0 0 10px var(--cyan-glow);
-  border-radius: 3px;
-}
-
-.scanning-screen__bar-label {
+/* ─── Warning ────────────────────────────── */
+.analyzing-screen__warning {
+  margin-top: var(--space-xl);
   font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--text-dim);
-  text-align: center;
-  margin-top: 0.5rem;
+  font-size: 11px;
+  color: var(--mute);
+  letter-spacing: 0.3px;
 }
 
-/* Telemetry */
-.scanning-screen__telemetry {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1.2rem;
-  margin-bottom: 1.5rem;
-}
-
-.scanning-screen__telemetry-header {
-  font-family: var(--font-display);
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: var(--cyan);
-  letter-spacing: 0.15em;
-  margin-bottom: 1rem;
-}
-
-.scanning-screen__telemetry-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-/* Hex decoration */
-.scanning-screen__hex {
-  font-family: var(--font-mono);
-  font-size: 0.55rem;
-  color: var(--text-dim);
-  opacity: 0.3;
-  text-align: center;
-  word-break: break-all;
-  line-height: 1.6;
-}
-
-.scanning-screen__hex-line {
-  margin-bottom: 0.2rem;
-}
-
-/* Mobile */
-@media (max-width: 600px) {
-  .scanning-screen__phases {
-    padding: 0.8rem;
-  }
-
-  .scanning-screen__phase {
-    font-size: 0.65rem;
-  }
-
-  .scanning-screen__telemetry {
-    padding: 0.8rem;
+/* ─── Responsive ─────────────────────────── */
+@media (max-width: 480px) {
+  .analyzing-screen__card {
+    padding: var(--space-2xl) var(--space-lg);
   }
 }

@@ -1,159 +1,110 @@
-import { useState } from 'react';
+/**
+ * QuizScreen — The core Question → Answer → Reaction → Next loop
+ *
+ * State machine per question:
+ *   1. 'asking'       → show question + options
+ *   2. 'reacting'     → show GIF + system reaction text (2.5s)
+ *   3. auto-advance   → fade out, next question
+ */
+
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import questions from '../data/questions';
+import { getPhase, getReaction } from '../data/reactions';
+import { fetchReactionGif } from '../utils/gifFetcher';
 import { playBlip, markInteraction } from '../utils/sound';
 import './QuestionScreen.css';
 
-/**
- * Meme search keywords per question ID — maps each question to funny,
- * meme-relevant search terms for each answer weight tier.
- * Format: { questionId: { low: 'keyword', mid: 'keyword', high: 'keyword', max: 'keyword' } }
- */
-const memeKeywords = {
-  sleep:         { low: 'well rested happy', mid: 'tired sleepy', high: 'no sleep zombie', max: 'insomnia meme funny' },
-  caffeine:      { low: 'water healthy', mid: 'coffee morning', high: 'too much coffee', max: 'caffeine overdose meme' },
-  deadlines:     { low: 'relaxed chill', mid: 'deadline stress', high: 'deadline panic', max: 'everything is fine fire meme' },
-  screentime:    { low: 'touching grass outside', mid: 'screen time', high: 'glued to screen', max: 'screen addiction meme' },
-  meals:         { low: 'healthy food', mid: 'forgot to eat', high: 'skipping meals', max: 'coffee is food meme' },
-  exercise:      { low: 'gym workout', mid: 'exercise lazy', high: 'no exercise couch', max: 'walking to fridge exercise meme' },
-  socialbattery: { low: 'extrovert party', mid: 'introvert recharge', high: 'social anxiety', max: 'social battery dead meme' },
-  motivation:    { low: 'motivated hustle', mid: 'autopilot mode', high: 'no motivation', max: 'motivation left the chat meme' },
-  procrastination:{ low: 'productive focused', mid: 'procrastinating a little', high: 'procrastination meme', max: 'procrastinating with deadlines meme' },
-  mentalstate:   { low: 'zen peaceful', mid: 'brain tabs open', high: 'mental chaos', max: 'too many browser tabs meme' },
-  lastbreak:     { low: 'vacation relaxing', mid: 'need a break', high: 'burnout meme', max: 'what is a break meme' },
-  coping:        { low: 'healthy hobby', mid: 'comfort show', high: 'doom scrolling meme', max: 'staring into void meme' },
-  emails:        { low: 'inbox zero', mid: 'unread emails', high: 'email overload', max: 'inbox overflow meme' },
-  existential:   { low: 'happy content', mid: 'existential crisis', high: 'meaning of life meme', max: 'continuous existential crisis meme' },
-  impostor:      { low: 'confident boss', mid: 'self doubt', high: 'impostor syndrome meme', max: 'stack overflow developer meme' },
-};
-
-/**
- * Pick a meme search keyword based on the question id and option weight.
- */
-function getMemeSearchTerm(questionId, weight) {
-  const kw = memeKeywords[questionId];
-  if (!kw) return 'funny reaction meme';
-  if (weight <= 0) return kw.low;
-  if (weight <= 1) return kw.mid;
-  if (weight <= 3) return kw.high;
-  return kw.max;
-}
-
-/**
- * QuestionScreen — Displays questions one at a time with animated transitions.
- *
- * @param {function} onComplete — called with answers object when all questions answered
- */
-export default function QuestionScreen({ onComplete }) {
+export default function QuizScreen({ questions, onComplete }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [phase, setPhase] = useState('asking'); // 'asking' | 'reacting'
   const [selectedOption, setSelectedOption] = useState(null);
-  const [memeUrl, setMemeUrl] = useState(null);
-  const [memeLoading, setMemeLoading] = useState(false);
+  const [reactionText, setReactionText] = useState('');
+  const [gifUrl, setGifUrl] = useState(null);
+  const [gifLoading, setGifLoading] = useState(false);
 
   const question = questions[currentIndex];
   const totalQuestions = questions.length;
-  const progressPct = Math.round(((currentIndex) / totalQuestions) * 100);
+  const progressPct = Math.round((currentIndex / totalQuestions) * 100);
   const filled = Math.floor((currentIndex / totalQuestions) * 20);
   const empty = 20 - filled;
   const progressBar = '█'.repeat(filled) + '░'.repeat(empty);
 
   /**
-   * Advance to the next question (or finish).
+   * Advance to the next question or complete the quiz.
    */
-  const advance = (optionIndex) => {
-    const newAnswers = { ...answers, [question.id]: optionIndex };
-    setAnswers(newAnswers);
-    setSelectedOption(null);
-    setMemeUrl(null);
-    setMemeLoading(false);
-
+  const advance = useCallback(() => {
     if (currentIndex < totalQuestions - 1) {
       setCurrentIndex((prev) => prev + 1);
+      setPhase('asking');
+      setSelectedOption(null);
+      setReactionText('');
+      setGifUrl(null);
+      setGifLoading(false);
     } else {
-      onComplete(newAnswers);
+      // Quiz complete — pass all answers to parent
+      onComplete(answers);
     }
-  };
+  }, [currentIndex, totalQuestions, answers, onComplete]);
 
+  /**
+   * Auto-advance after showing reaction for 2.5s (or 1s if GIF failed).
+   */
+  useEffect(() => {
+    if (phase !== 'reacting') return;
+
+    const delay = gifUrl ? 2500 : 1200;
+    const timer = setTimeout(advance, delay);
+    return () => clearTimeout(timer);
+  }, [phase, gifUrl, advance]);
+
+  /**
+   * Handle option selection.
+   */
   const handleSelect = async (optionIndex) => {
     markInteraction();
     playBlip();
-    setSelectedOption(optionIndex);
-    setMemeLoading(true);
-    setMemeUrl(null);
 
     const option = question.options[optionIndex];
-    const searchTerm = getMemeSearchTerm(question.id, option.weight);
+    const newAnswers = { ...answers, [question.id]: optionIndex };
+    setAnswers(newAnswers);
+    setSelectedOption(optionIndex);
 
-    // Giphy API (free public beta key, confirmed working)
-    // Override with Tenor: set VITE_TENOR_API_KEY in .env
-    const tenorKey = import.meta.env.VITE_TENOR_API_KEY;
-    let endpoint;
-    let isTenor = false;
+    // Get reaction based on phase + answer tier
+    const quizPhase = getPhase(currentIndex, totalQuestions);
+    const reaction = getReaction(quizPhase, option.tier);
+    setReactionText(reaction.text);
 
-    if (tenorKey) {
-      // User supplied their own Tenor v2 key
-      isTenor = true;
-      endpoint = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(searchTerm)}&key=${tenorKey}&client_key=how_cooked_am_i&limit=8&media_filter=gif`;
-    } else {
-      // Default: Giphy API with public beta key
-      const giphyKey = 'GlVGYHkr3WSBnllca54iNt0yFbjz7L65';
-      endpoint = `https://api.giphy.com/v1/gifs/search?api_key=${giphyKey}&q=${encodeURIComponent(searchTerm)}&limit=8&rating=pg`;
-    }
+    // Switch to reaction mode
+    setPhase('reacting');
+    setGifLoading(true);
 
-    try {
-      const response = await fetch(endpoint);
-      if (response.ok) {
-        const data = await response.json();
-        const results = data.results || data.data || [];
-        if (results.length > 0) {
-          // Pick a random result from the top 8 for variety
-          const pick = results[Math.floor(Math.random() * results.length)];
-          let gifUrl;
-          if (isTenor) {
-            gifUrl = pick?.media_formats?.tinygif?.url || pick?.media_formats?.gif?.url || null;
-          } else {
-            // Giphy: use fixed_height for good quality at reasonable size
-            gifUrl = pick?.images?.fixed_height?.url || pick?.images?.original?.url || null;
-          }
-          if (gifUrl) {
-            setMemeUrl(gifUrl);
-            setMemeLoading(false);
-            // Show the meme for 2.5 seconds, then advance
-            setTimeout(() => advance(optionIndex), 2500);
-            return; // early return — advance is scheduled
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('GIF API fetch failed:', e);
-    }
-
-    // If we get here, the fetch failed or returned no results — advance quickly
-    setMemeLoading(false);
-    setTimeout(() => advance(optionIndex), 500);
+    // Fetch GIF in background
+    const url = await fetchReactionGif(reaction.gif);
+    setGifUrl(url);
+    setGifLoading(false);
   };
 
   return (
     <motion.div
-      className="question-screen"
+      className="quiz-screen"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="question-screen__container">
+      <div className="quiz-screen__container">
         {/* Header */}
-        <div className="question-screen__header">
-          <div className="question-screen__header-left">
-            <span className="question-screen__badge">DIAGNOSTIC SCAN</span>
-            <span className="question-screen__counter">
-              QUERY {currentIndex + 1} / {totalQuestions}
+        <div className="quiz-screen__header">
+          <div className="quiz-screen__header-left">
+            <span className="quiz-screen__badge">STRESS PROBE</span>
+            <span className="quiz-screen__counter">
+              {String(currentIndex + 1).padStart(2, '0')} / {String(totalQuestions).padStart(2, '0')}
             </span>
           </div>
-          <div className="question-screen__progress-text">
-            <span className="question-screen__progress-bar-text">{progressBar}</span>
-            <span className="question-screen__progress-pct">{progressPct}%</span>
+          <div className="quiz-screen__progress-area">
+            <span className="quiz-screen__progress-bar-text">{progressBar}</span>
+            <span className="quiz-screen__progress-pct">{progressPct}%</span>
           </div>
         </div>
 
@@ -161,60 +112,75 @@ export default function QuestionScreen({ onComplete }) {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
-            className="question-screen__card"
+            className="quiz-screen__card"
             initial={{ opacity: 0, x: 40, scale: 0.98 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: -40, scale: 0.98 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
           >
             {/* System check label */}
-            <div className="question-screen__label">
-              <span className="question-screen__label-icon">◈</span>
+            <div className="quiz-screen__label">
+              <span className="quiz-screen__label-icon">◈</span>
               SYSTEM CHECK: {question.label}
             </div>
 
             {/* Question text */}
-            <h2 className="question-screen__question">{question.question}</h2>
+            <h2 className="quiz-screen__question">{question.question}</h2>
 
             {/* Options */}
-            <div className="question-screen__options">
+            <div className="quiz-screen__options">
               {question.options.map((option, i) => (
                 <motion.button
                   key={i}
-                  className={`question-screen__option ${selectedOption === i ? 'question-screen__option--selected' : ''}`}
+                  id={`option-${question.id}-${i}`}
+                  className={`quiz-screen__option ${
+                    selectedOption === i ? 'quiz-screen__option--selected' : ''
+                  }`}
                   onClick={() => handleSelect(i)}
-                  whileHover={{ scale: 1.02, x: 4 }}
-                  whileTap={{ scale: 0.98 }}
-                  disabled={selectedOption !== null}
+                  whileHover={phase === 'asking' ? { scale: 1.02, x: 4 } : {}}
+                  whileTap={phase === 'asking' ? { scale: 0.98 } : {}}
+                  disabled={phase !== 'asking'}
                 >
-                  <span className="question-screen__option-radio">
+                  <span className="quiz-screen__option-radio">
                     {selectedOption === i ? '◉' : '○'}
                   </span>
-                  <span className="question-screen__option-text">{option.text}</span>
+                  <span className="quiz-screen__option-text">{option.text}</span>
                 </motion.button>
               ))}
             </div>
 
-            {/* Meme Loading Indicator */}
-            {memeLoading && (
-              <div className="question-screen__meme-loading">
-                <span className="question-screen__meme-loading-icon">◈</span>
-                FETCHING REACTION DATA...
-              </div>
-            )}
-
-            {/* Meme Display */}
+            {/* Reaction area */}
             <AnimatePresence>
-              {memeUrl && (
+              {phase === 'reacting' && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                  animate={{ opacity: 1, height: 'auto', marginTop: '1.2rem' }}
-                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="question-screen__meme-container"
+                  className="quiz-screen__reaction"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.35 }}
                 >
-                  <div className="question-screen__meme-label">⚡ SYSTEM REACTION</div>
-                  <img src={memeUrl} alt="Reaction meme" className="question-screen__meme" />
+                  {/* GIF */}
+                  {gifLoading && (
+                    <div className="quiz-screen__gif-loading">
+                      <span className="quiz-screen__gif-loading-icon">◈</span>
+                      FETCHING REACTION DATA...
+                    </div>
+                  )}
+                  {gifUrl && (
+                    <div className="quiz-screen__gif-container">
+                      <img
+                        src={gifUrl}
+                        alt="Reaction"
+                        className="quiz-screen__gif"
+                      />
+                    </div>
+                  )}
+
+                  {/* System reaction text */}
+                  <div className="quiz-screen__reaction-text">
+                    <span className="quiz-screen__reaction-prompt">&gt;_</span>
+                    {reactionText}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -222,8 +188,9 @@ export default function QuestionScreen({ onComplete }) {
         </AnimatePresence>
 
         {/* Bottom status */}
-        <div className="question-screen__status">
-          <span className="question-screen__status-dot" /> LIVE SCAN IN PROGRESS
+        <div className="quiz-screen__status">
+          <span className="quiz-screen__status-dot" />
+          LIVE SCAN IN PROGRESS
         </div>
       </div>
     </motion.div>
